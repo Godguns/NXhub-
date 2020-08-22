@@ -26,7 +26,7 @@ router.get('/api/v1/auth/login',(req,res)=>{
 			password:body.password,
 			avater:user.avater
 		}
-	})
+			})
 		}
 		
   
@@ -89,13 +89,19 @@ router.get('/api/v1/spit2',(req,res)=>{
 	var news = new News({
 					username: body.username,
 					content: body.content,
-					avater:"http://oss.seefs.cn/FkY0NryjjofNmswpXTWpyinRjxwp",
-					time:body.time	 });
+					avater:body.avater,
+					time:body.time
+					 });
 				news.save(function(err, ret) {
 						if (err) {
-							//console.log('保存失败');
+							console.log('发布吐槽失败',err);
+								res.json({
+							"code":200,
+							"msg":"发布失败",
+							
+						})
 						} else {
-							//console.log('保存成功');
+							console.log('发布吐槽成功');
 							console.log(ret);
 							res.json({
 							"code":200,
@@ -176,6 +182,44 @@ router.get('/api/v1/auth/change_info',  (req,res)=>{
 
 
 		}
+		})
+})
+//获取吐槽动态
+router.get('/api/v1/spit',(req,res)=>{
+		News.find(function(err,ret){
+			if(err){
+
+				res.json({
+					"data":"查询失败"
+				})
+				console.log('查询失败');
+			}else{
+				console.log('查询成功');
+				res.json({
+					"data":ret
+				})
+			}
+			})	
+})
+//获取个人动态
+router.get('/api/peason',(req,res)=>{
+	News.find({
+		username:req.query.username
+
+	},function(err,ret){
+				if(err){
+
+				res.json({
+					"data":"查询失败"
+				})
+				console.log('查询失败');
+			}else{
+				console.log('查询成功');
+				res.json({
+					"data":ret
+				})
+			}
 	})
 })
+
 module.exports = router;

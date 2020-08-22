@@ -8,7 +8,7 @@ var news=new Schema({
 		type:String,
 		required:true
 	},
-	avatar:{
+	avater:{
 		type:String,
 		required:true
 	},
