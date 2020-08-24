@@ -19,6 +19,10 @@ var news=new Schema({
 	time:{
 		type:String,
 		required:true
+	},
+	img:{
+		type:String,
+		required:false
 	}
 
 

@@ -90,7 +90,8 @@ router.get('/api/v1/spit2',(req,res)=>{
 					username: body.username,
 					content: body.content,
 					avater:body.avater,
-					time:body.time
+					time:body.time,
+					img:body.img
 					 });
 				news.save(function(err, ret) {
 						if (err) {
@@ -221,5 +222,47 @@ router.get('/api/peason',(req,res)=>{
 			}
 	})
 })
+//获取用户的关注列表
+router.get('/findfork',(req,res)=>{
+	var body=req.query;
+	User.findOne({
+		username:body.username,
+	},async (err,ret)=>{
+		if (err) {
+			res.send("err!")
+		}else if(!ret){
+			console.log("没有此用户")
+		}else{
+			res.json({
+				'fork':ret.fork
+			})
+		}
+	})
+})
+//添加关注
+router.get('/addfork',async (req,res)=>{
+	var body=req.query;
+	User.findOne({
+		username:body.username,
 
+	},async (err,ret)=>{
+		if (err) {
+			res.send("err!")
+		}else if(!ret){
+			console.log("没有此用户")
+		}
+		else{
+			var retup=	await User.updateOne({
+				username: ret.username, password:ret.password,avater: ret.avater}, { fork: body.fork }
+				);
+				User.findOne({username:body.username},(err,ret)=>{
+					res.json({
+						'data':ret
+					})
+				})
+			
+		}
+	})
+
+})
 module.exports = router;

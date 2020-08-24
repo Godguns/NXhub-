@@ -13,6 +13,10 @@ var userSchema=new Schema({
 	avater:{
 		type:String,
 		required:true
+	},
+	fork:{
+		type:[],
+		required:false
 	}
 })
 module.exports=mongooes.model('User',userSchema);
