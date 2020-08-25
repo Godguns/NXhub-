@@ -74,7 +74,7 @@ router.get('/api/v1/user/register',(req,res)=>{
 					}else{
 
 						 res.json({
-						 	"code":"err"
+						 	"code":"这个用户名已经被注册过啦！"
 						 })
 					}
 		
@@ -150,7 +150,8 @@ router.get('/api/v1/auth',(req,res)=>{
 				"code":"200",
 				"username":user.username,
 				"password":user.password,
-				"avater":user.avater
+				"avater":user.avater,
+				"fork":user.fork
 
 			})
 		}
@@ -176,6 +177,10 @@ router.get('/api/v1/auth/change_info',  (req,res)=>{
 		var ret=	await User.updateOne({
 				 username: body.username, password:body.password}, { avater: body.avater }
 				 );
+				 await News.updateMany({
+					username: body.username}, { avater: body.avater }
+					);
+
 		console.log("修改结果为",ret)
 		res.json({
 			"data":ret
@@ -253,14 +258,88 @@ router.get('/addfork',async (req,res)=>{
 		}
 		else{
 			var retup=	await User.updateOne({
-				username: ret.username, password:ret.password,avater: ret.avater}, { fork: body.fork }
+				username: ret.username, password:ret.password,avater: ret.avater}, { fork: body.fork.split(',')}
 				);
 				User.findOne({username:body.username},(err,ret)=>{
 					res.json({
 						'data':ret
-					})
+					})	
 				})
 			
+		}
+	})
+
+})
+//根据用户名字返回用户信息
+router.get('/getpeopleinfo',(req,res)=>{
+	var body=req.query;
+	User.findOne({
+		username:body.username,
+		
+	},(err,user)=>{
+		//console.log(user)
+		if(err){
+			res.send("err!")
+		}
+		if(!user){
+			  res.send("no找不到!")
+		}else{
+			News.find({
+				username:req.query.username
+		
+			},function(err,ret){
+						if(err){
+		
+						res.json({
+							"data":"查询失败"
+						})
+						console.log('查询失败');
+					}else{
+						console.log('查询成功');
+						res.json({
+							"data":ret,
+							"info":user
+						})
+					}
+			})
+			
+			
+		}
+
+	})
+
+})
+//获取用户的关注
+router.get('/getuserforks',(req,res)=>{
+	var body=req.query;
+	User.findOne({
+		username:body.username
+	}, async(err,ret)=>{
+		if(err){
+			res.json({
+				code:"err!"
+			})
+		}else{
+			var result=[]
+			for(var i=0;i<ret.fork.length;i++){
+				await User.findOne({
+					username:ret.fork[i]
+				}, (err,ret)=>{
+					if(err){
+						res.send("出错了")
+					}else{
+						//console.log(ret)
+						result.push(ret)
+						//console.log(result)
+						
+					}
+				})
+			}
+	
+			console.log(result)
+			res.json({
+				"data":result
+			})
 		}
 	})
 
