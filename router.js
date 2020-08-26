@@ -1,8 +1,10 @@
 var User=require('./models/user')
 var News=require('./models/new')
+var Pixiv=require('./models/pixiv')
 var express=require('express');
 var router= express.Router();
 const qiniu = require("qiniu");
+const e = require('express');
 //登录接口
 router.get('/api/v1/auth/login',(req,res)=>{
 	var body=req.query
@@ -24,7 +26,9 @@ router.get('/api/v1/auth/login',(req,res)=>{
 		"data":{
 			username:body.username,
 			password:body.password,
-			avater:user.avater
+			avater:user.avater,
+			history:user.history,
+			collect:user.collect
 		}
 			})
 		}
@@ -122,7 +126,7 @@ router.get('/api/v1/file/token',(req,res)=>{
   let mac=new qiniu.auth.digest.Mac(accesskey,ssk);
   let options={
     scope:bucket,
-    // expires:360*24
+     expires:360*24
   };
   let putPolicy=new qiniu.rs.PutPolicy(options);
   let uploadToken=putPolicy.uploadToken(mac);
@@ -257,9 +261,13 @@ router.get('/addfork',async (req,res)=>{
 			console.log("没有此用户")
 		}
 		else{
-			var retup=	await User.updateOne({
-				username: ret.username, password:ret.password,avater: ret.avater}, { fork: body.fork.split(',')}
+				await User.updateOne({
+				username: ret.username, password:ret.password,avater: ret.avater}, { fans: body.fork.split(',')}
 				);
+				await User.updateOne({
+					username:body.user
+				},{fork:body.usergz.split(',')})
+
 				User.findOne({username:body.username},(err,ret)=>{
 					res.json({
 						'data':ret
@@ -309,8 +317,8 @@ router.get('/getpeopleinfo',(req,res)=>{
 	})
 
 })
-//获取用户的关注
-router.get('/getuserforks',(req,res)=>{
+//获取用户的粉丝
+router.get('/getuserforks',async (req,res)=>{
 	var body=req.query;
 	User.findOne({
 		username:body.username
@@ -320,28 +328,106 @@ router.get('/getuserforks',(req,res)=>{
 				code:"err!"
 			})
 		}else{
-			var result=[]
-			for(var i=0;i<ret.fork.length;i++){
+			var result=[];
+			var avaterlist=[]
+			for(let i=0;i<ret.fans.length;i++){
+				
 				await User.findOne({
-					username:ret.fork[i]
+					username:ret.fans[i]
 				}, (err,ret)=>{
 					if(err){
 						res.send("出错了")
 					}else{
-						//console.log(ret)
+						console.log(ret)
 						result.push(ret)
-						//console.log(result)
+						
 						
 					}
 				})
 			}
-	
-			console.log(result)
+			for(let i=0;i<ret.fork.length;i++){
+				await User.findOne({username:ret.fork[i]},(err,ret)=>{
+					if(err){
+						res.send("出错了")
+					}else{
+						console.log(ret)
+						avaterlist.push(ret)
+						
+						
+					}
+				})
+
+			}
+			console.log("触发！！！")
+		setTimeout(()=>{
 			res.json({
-				"data":result
+				"data":result,
+				"forks":avaterlist
+			})
+		},200)
+		}
+	})
+
+})
+//用户上传图片接口
+router.get('/supdate',(req,res)=>{
+	var body=req.query;
+	var pixiv=new Pixiv({
+		tag:body.tag,
+		info:body.info,
+		title:body.title,
+		author:body.author,
+		imgsrc:body.imgsrc,
+		Album:body.Album,
+		time:body.time
+	});
+	pixiv.save(async (err,ret)=>{
+		if(err){
+			res.json({
+				"data":"err"
+			})
+		}else{
+		
+			
+			var newhistory=[]
+		await	User.findOne({username:body.author},(err,ret)=>{
+				if(err){
+					console.log("myc!")
+				}else{
+				
+					newhistory=	ret.history
+					
+				}
+			})
+			newhistory.push(body.imgsrc)
+			var ret=await User.updateOne({username: body.author}, {history:newhistory});
+			res.json({
+				"data":ret
 			})
 		}
 	})
+
+})
+//为瀑布流提供图片数据
+router.get('/getpics',(req,res)=>{
+	Pixiv.find({
+
+	},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":"获取瀑布流数据失败"
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+
+	})
+
+})
+//判断用户是否为超级管理员
+router.get('/isAdmin',(req,res)=>{
 
 })
 module.exports = router;

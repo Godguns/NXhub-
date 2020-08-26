@@ -17,6 +17,18 @@ var userSchema=new Schema({
 	fork:{
 		type:[],
 		required:false
+	},
+	fans:{
+		type:[],
+		required:false
+	},
+	history:{
+		type:[],
+		required:false
+	},
+	collect:{
+		type:[],
+		required:false
 	}
 })
 module.exports=mongooes.model('User',userSchema);
