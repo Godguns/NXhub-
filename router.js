@@ -155,7 +155,9 @@ router.get('/api/v1/auth',(req,res)=>{
 				"username":user.username,
 				"password":user.password,
 				"avater":user.avater,
-				"fork":user.fork
+				"fork":user.fork,
+				"history":user.history,
+				"collect":user.collect
 
 			})
 		}
@@ -426,8 +428,51 @@ router.get('/getpics',(req,res)=>{
 	})
 
 })
-//判断用户是否为超级管理员
-router.get('/isAdmin',(req,res)=>{
+//添加收藏
+router.get('/tocollect',(req,res)=>{
+	var body=req.query;
+	User.findOne({
+		username:body.username,
+		
+	},async (err,ret)=>{
+		if(err){
+			res.json({
+				"data":"wrong!"
+			})
+		}else{
+			var newcollect=ret.collect;
+			newcollect.push(body.img)
+		 await	User.updateOne({ username: body.username},{collect:newcollect});
+		 res.json({
+			 "data":"OK"
+		 })
+		}
+	})
 
+})
+//根据图片名字获取用户信息
+router.get('/usermsg',(req,res)=>{
+	var body =req.query;
+	Pixiv.findOne({
+		imgsrc:body.img
+	},async(err,ret)=>{
+			if(err){
+				console.log("err!")
+			}else{
+				//console.log(body.im)
+			await	User.findOne({username:ret.author},(err,result)=>{
+					
+					
+						if (err) {
+							console.log("查询失败")
+						}else{
+							res.json({
+								"data":result
+							})
+						}
+				})
+			}
+
+	})
 })
 module.exports = router;
