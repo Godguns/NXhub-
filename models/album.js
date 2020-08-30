@@ -1,38 +1,30 @@
 var mongooes=require('mongoose')
 mongooes.connect('mongodb://localhost/test', { useNewUrlParser: true })
 var Schema=mongooes.Schema
-var pixiv=new Schema({
+var album=new Schema({
 	
-	tag:{
+    Album_imgs:{
         type:[],
         required:false
     },
-	info:{
+    Album_info:{
 		type:String,
 		required:false
 	},
-	title:{
+	
+    Album_author:{
 		type:String,
 		required:false
 	},
-	author:{
-		type:String,
-		required:false
-	},
-	avater:{
-		type:String,
-		required:true
-
-	},
-	imgsrc:{
+	master_img:{
 		type:String,
 		required:true
     },
-    Album:{
+    Album_name:{
         type:String,
         required:false
     },
-    time:{
+    Album_time:{
         type:String,
         required:true
 	}
@@ -40,4 +32,4 @@ var pixiv=new Schema({
 
 
 })
-module.exports=mongooes.model('Pixiv',pixiv);
+module.exports=mongooes.model('Album',album);

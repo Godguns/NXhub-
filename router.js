@@ -1,10 +1,12 @@
 var User=require('./models/user')
 var News=require('./models/new')
 var Pixiv=require('./models/pixiv')
+var Album=require('./models/album')
 var express=require('express');
 var router= express.Router();
 const qiniu = require("qiniu");
 const e = require('express');
+var Talklist=require('./models/talklist')
 //登录接口
 router.get('/api/v1/auth/login',(req,res)=>{
 	var body=req.query
@@ -381,7 +383,8 @@ router.get('/supdate',(req,res)=>{
 		author:body.author,
 		imgsrc:body.imgsrc,
 		Album:body.Album,
-		time:body.time
+		time:body.time,
+		avater:body.avater
 	});
 	pixiv.save(async (err,ret)=>{
 		if(err){
@@ -473,6 +476,94 @@ router.get('/usermsg',(req,res)=>{
 				})
 			}
 
+	})
+})
+//获取评论参数是_id
+router.get('/get_talklist',(req,res)=>{
+	var body=req.query;
+	Pixiv.findOne({
+		_id:body._id
+
+	},(err,ret)=>{
+		if (err) {
+			console.log("查询评论失败")
+		}else{
+			Talklist.find({imgsrc:ret.imgsrc},(err,ret)=>{
+				if (err) {
+					res.json({
+						"data":err
+					})
+				}else{
+					console.log(ret)
+					res.json({
+						"data":ret
+					})
+				}
+			})
+		}
+	})
+
+})
+//添加评论
+router.get('/addtalk',(req,res)=>{
+	var body=req.query;
+	var talkliist=new Talklist({
+		imgsrc:body.imgsrc,
+		username:body.username,
+		avater:body.avater,
+		content:body.content,
+		time:body.time,
+		reback:body.reback
+	})
+	talkliist.save({
+		
+	},(err,ret)=>{
+		if (err) {
+			res.json({
+				"data":err
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//添加专辑
+router.get('/add_album',(req,res)=>{
+	var body=req.query;
+	var album=new Album({
+		Album_imgs:body.Album_imgs,
+		Album_info:body.Album_info,
+		Album_author:body.Album_author,
+		master_img:body.master_img,
+		Album_name:body.Album_name,
+		Album_time:body. Album_time,
+
+	})
+	album.save((err,ret)=>{
+		if (err) {
+			console.log(err,"添加专辑失败")
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//获取专辑
+router.get('/get_album',(req,res)=>{
+	var body=req.query;
+	Album.find({
+
+	},(err,ret)=>{
+		if (err) {
+			console.log("获取专辑失败")
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
 	})
 })
 module.exports = router;
