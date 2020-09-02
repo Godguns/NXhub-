@@ -7,6 +7,9 @@ var router= express.Router();
 const qiniu = require("qiniu");
 const e = require('express');
 var Talklist=require('./models/talklist')
+var jwt=require('jsonwebtoken')
+var tj=require('./models/TuiJian')
+var banner=require('./models/Banner')
 //登录接口
 router.get('/api/v1/auth/login',(req,res)=>{
 	var body=req.query
@@ -20,11 +23,12 @@ router.get('/api/v1/auth/login',(req,res)=>{
 		if(!user){
 			  res.send("no!")
 		}else{
-		 req.session.user = user
+		var token=	jwt.sign(body.username,"token")
+		// req.session.user = user
 		res.json({
 		"code":200,
 		"msg":"登录成功",
-		"cookie":req.session.user,
+		"token":token,
 		"data":{
 			username:body.username,
 			password:body.password,
@@ -135,6 +139,23 @@ router.get('/api/v1/file/token',(req,res)=>{
   res.json({
     "token":uploadToken
   })
+
+})
+//根据token获取用户信息
+router.get('/auth',(req,res)=>{
+	var body=req.query;
+	var username=jwt.verify(req.query.token,"token");
+	//console.log(jwt.verify(req.headers.authorization,"token"))
+	User
+	.findOne({username},(err,ret)=>{
+		if(err){
+			res.send("获取token失败，请尝试重新登录")
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
 
 })
 //获取当前用户信息
@@ -431,6 +452,27 @@ router.get('/getpics',(req,res)=>{
 	})
 
 })
+//根据收藏图片跳转图片详情页面
+router.get('/toinfopic',(req,res)=>{
+	var body=req.query;
+	Pixiv.find({},async (err,ret)=>{
+		if (err) {
+			console.log(err)
+		}else{
+		await	ret.forEach((item,index)=>{
+				if (item.imgsrc===body.img) {
+					
+						res.json({
+							"data":index
+						})
+				}else{
+					console.log("没有！")
+				}
+			})
+		}
+	})
+
+})
 //添加收藏
 router.get('/tocollect',(req,res)=>{
 	var body=req.query;
@@ -478,6 +520,7 @@ router.get('/usermsg',(req,res)=>{
 
 	})
 })
+
 //获取评论参数是_id
 router.get('/get_talklist',(req,res)=>{
 	var body=req.query;
@@ -532,18 +575,96 @@ router.get('/addtalk',(req,res)=>{
 //添加专辑
 router.get('/add_album',(req,res)=>{
 	var body=req.query;
-	var album=new Album({
-		Album_imgs:body.Album_imgs,
+	
+	Album.findOne({Album_imgs:body.Album_imgs,
+		Album_tags:body.Album_tags,
 		Album_info:body.Album_info,
 		Album_author:body.Album_author,
 		master_img:body.master_img,
 		Album_name:body.Album_name,
 		Album_time:body. Album_time,
-
+		isRecommend:body.isRecommend},async(err,ret)=>{
+		if(err){
+			res.json({"data":"err"})
+		}else{
+			console.log(ret)
+		if(ret===null){
+			var album=new Album({
+				Album_tags:body.Album_tags,
+				Album_imgs:body.Album_imgs,
+				Album_info:body.Album_info,
+				Album_author:body.Album_author,
+				master_img:body.master_img,
+				Album_name:body.Album_name,
+				Album_time:body. Album_time,
+				isRecommend:body.isRecommend
+		
+			})
+			album.save((err,ret)=>{
+				if (err) {
+					console.log(err,"添加专辑失败")
+				}else{
+					res.json({
+						"data":ret
+					})
+				}
+			})
+		}else{
+			res.json({
+				"data":"已经存在这样的专辑了"
+			})
+		}
+			// var updateret=await Album.updateOne(ret,{
+			// 	Album_imgs:body.Album_imgs,
+			// 	Album_info:body.Album_info,
+			// 	Album_author:body.Album_author,
+			// 	master_img:body.master_img,
+			// 	Album_name:body.Album_name,
+			// 	Album_time:body. Album_time,
+			// 	isRecommend:body.isRecommend
+			// })
+			// res.json({
+			// 	"data":updateret
+			// })
+		
+		
+		}
 	})
-	album.save((err,ret)=>{
+
+
+})
+//修改专辑
+router.get('/update_album',(req,res)=>{
+	var body=req.query;
+	Album.findOne({_id:body._id},async(err,ret)=>{
+		if(err){
+			res.json({
+				"data":err
+			})
+		}else{
+	var updata=	await	Album.updateOne({_id:body._id},{
+				Album_tags:body.Album_tags,
+				Album_info:body.Album_info,
+				Album_author:body.Album_author,
+				master_img:body.master_img,
+				Album_name:body.Album_name,
+				Album_time:body. Album_time,
+				isRecommend:body.isRecommend
+			})
+			res.json({
+				"data":updata
+			})
+		}
+	})
+})
+//获取推荐专辑
+router.get('/getR_album',(req,res)=>{
+	var body=req.query;
+	Album.find({
+		isRecommend:true
+	},(err,ret)=>{
 		if (err) {
-			console.log(err,"添加专辑失败")
+			console.log("获取专辑失败")
 		}else{
 			res.json({
 				"data":ret
@@ -551,15 +672,137 @@ router.get('/add_album',(req,res)=>{
 		}
 	})
 })
-//获取专辑
+//获取全部专辑
 router.get('/get_album',(req,res)=>{
 	var body=req.query;
 	Album.find({
-
+		
 	},(err,ret)=>{
 		if (err) {
 			console.log("获取专辑失败")
 		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//设置专辑
+router.get('/set_album',async (req,res)=>{
+	var body=req.query;
+	Album.findOne({_id:body._id},async (err,ret)=>{
+		if (err) {
+			res.json({
+				"data":err
+			})
+		}else{
+		var msg=	await	Album.updateOne({_id:body._id},{isRecommend:body.isRecommend})
+			res.json({
+				"data":msg
+			})
+		}
+	})
+})
+//获取推荐关注接口
+router.get('/get_TJ',(req,res)=>{
+	var body=req.query;
+	tj.find({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":err
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//添加推荐关注
+router.get('/add_TJ',(req,res)=>{
+	var body=req.query;
+	User.findOne({username:body.username},(err,ret)=>{
+		if(err){res.json({"data":err})}else{
+			var tuijian=new tj({
+				username:body.username,
+				avater:ret.avater
+				
+			})
+			tuijian.save({},(err,ret)=>{
+				if(err){
+					res.json({
+						"data":err
+					})
+				}else{
+					res.json({
+						"data":ret
+					})
+				}
+			})
+		}
+	})
+	
+
+})
+//添加轮播图管理
+router.get('/add_banner',(req,res)=>{
+	var body=req.query;
+	var ban=new banner({
+		banner:body.banner
+	})
+	ban.save({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":err
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//获取轮播图
+router.get('/get_bannner',(req,res)=>{
+	banner.find({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":err
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//删除轮播图
+router.get('/del_banner',(req,res)=>{
+	var body=req.query;
+	
+				banner.remove({
+				_id: body._id
+			}, function (err, ret) {
+				if (err) {
+					console.log('删除失败')
+				} else {
+				res.json({
+					"data":ret
+				})
+			}
+		})
+})
+//根据专辑_id查找专辑内部的图片
+router.get('/findimgs_byid',(req,res)=>{
+	var body=req.query;
+	Album
+	.findOne({_id:body._id},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":ret
+			})
+		}else{
+			console.log(body._id)
 			res.json({
 				"data":ret
 			})

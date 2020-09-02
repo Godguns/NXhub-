@@ -2,7 +2,10 @@ var mongooes=require('mongoose')
 mongooes.connect('mongodb://localhost/test', { useNewUrlParser: true })
 var Schema=mongooes.Schema
 var album=new Schema({
-	
+	Album_tags:{
+        type:[],
+        required:false
+    },
     Album_imgs:{
         type:[],
         required:false
@@ -27,7 +30,11 @@ var album=new Schema({
     Album_time:{
         type:String,
         required:true
-	}
+    },
+    isRecommend:{
+        type:Boolean,
+        required:false
+    }
 
 
 
