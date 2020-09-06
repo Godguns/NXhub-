@@ -3,13 +3,151 @@ var path = require('path')
 var bodyParser = require('body-parser')
 var session = require('express-session')
 var router = require('./router')
-
+var isOnline=require('./models/isOnline')
 // 3 创建服务器应用程序
 //      也就是原来的http.createServer();
 var app = express();
+var http = require('http').createServer(app)
+var io = require('socket.io')(http);
+// function onConnection(socket){
+//   //console.log("连接")
+//   socket.on('online', (data) => {
+//     console.log(socket.id,"这个人上线了")
+//     //socket.emit('msg', "are u online?");
+//   })
+// }
+ 
+io.on('connection',  function(socket){
+  //socket.broadcast.emit('isconnect', "欢迎上线");
+  socket.emit('isconnect', "欢迎上线");
+  //socket.broadcast.emit('welcome', "欢迎上线");
+  socket.emit('welcome',"欢迎上线")
+    socket.on('online', async (data) => {
 
-// 公开指定目录
-// 只要通过这样做了，就可以通过/public/xx的方式来访问public目录中的所有资源
+    console.log(data.socket_id,"这个人上线了")
+   // console.log("++++++  "+data.username+"    ++++++++")
+     await isOnline.findOne({
+        username:data.username,
+       
+        
+      },async(err,ret)=>{
+        if(err){
+        //  console.log("查询在线状态失败！")
+        }else{
+         // console.log(ret===null)
+          if(ret===null){
+              var onlineuser=new isOnline({
+                username:data.username,
+                avater:data.avater,
+                socket_id:data.socket_id
+              });
+           await   onlineuser.save({},(err,ret)=>{
+                if(err){
+                  console.log(err)
+                }else{
+                  isOnline.find({},(err,ret)=>{
+                    if(err){}else{
+                      var people=new Set();
+                      for(var i=0; i<ret.length;i++){
+                        people.add(ret[i].username)
+                      }
+                      console.log(people)
+                      socket.broadcast.emit("datalist",[...people])
+                      socket.emit('datalist',[...people])
+                    }
+                  })
+                }
+              })
+          }else{
+           await isOnline.updateOne({
+              username:data.username,
+              
+            },{username:data.username,avater:data.avater,socket_id:data.socket_id})
+            await isOnline.findOne({
+              username:data.username
+            },(err,ret)=>{
+              if(err){
+                console.log("查找失败")
+              }else{
+                isOnline.find({},(err,ret)=>{
+                  if(err){}else{
+                    var people=new Set();
+                    for(var i=0; i<ret.length;i++){
+                      people.add(ret[i].username)
+                    }
+                    console.log(people)
+                    socket.broadcast.emit("datalist",[...people])
+                    socket.emit('datalist',[...people])
+                  }
+                })
+              }
+            })
+           
+          }
+       
+         
+       
+        }
+       
+      })
+     
+
+
+//????
+  
+});
+
+
+  socket.on('exit',function(data){
+    isOnline.deleteOne({username:data.username},async(err,ret)=>{
+      if(err){
+        console.log("删除出错")
+      }else{
+        //console.log("删除成功")
+       
+     await  isOnline.find({},async (err,ret)=>{
+       if(err){
+         console.log("???")
+       }else{
+        await socket.broadcast.emit('out',"退出登录")
+       }
+     })
+       
+        
+      }
+    })
+  })
+  socket.on('sender',async function(data){
+      //console.log(data)
+      //socket.broadcast.emit(data.to,"hhh")
+      
+
+     await isOnline.findOne({username:data.to},async (err,ret)=>{
+        if(err){
+          console.log("转发失败，查无此人")
+        }else{
+          var obj={
+            data:data,
+            avater:data.avater,
+            ret:ret
+          }
+         
+        await  socket.broadcast.emit(data.to,obj)
+        console.log(data.to+"接受消息："+obj)
+        }
+      })
+  })
+  
+});
+
+
+
+
+
+
+
+
+
 
 app.use((req,res,next)=>{
    res.header("Access-Control-Allow-Credentials", "true"); 
@@ -32,6 +170,13 @@ app.use(session({
   resave: false,
   saveUninitialized: false // 无论你是否使用 Session ，我都默认直接给你分配一把钥匙
 }))
+//监听客户端链接,回调函数会传递本次链接的socket
+
+
+// 监听连接断开事件
+// socket.on("disconnect", () => {
+//   console.log("连接已断开...");
+// });
 
 // 把路由挂载到 app 中
 app.use(router)
@@ -42,6 +187,6 @@ app.use(function (req, res) {
 })
 
 // 相当于server.listen
-app.listen(4000,function(){
+http.listen(4000,function(){
     console.log('服务在4000端口已经启动');
 })

@@ -72,7 +72,7 @@ router.get('/api/v1/user/register',(req,res)=>{
 								res.send("注册失败")
 							} else {
 								console.log('保存成功');
-								console.log(ret);
+								//console.log(ret);
 								res.json({
 								"code":200,
 								"msg":"注册成功"
@@ -113,7 +113,7 @@ router.get('/api/v1/spit2',(req,res)=>{
 						})
 						} else {
 							console.log('发布吐槽成功');
-							console.log(ret);
+							//console.log(ret);
 							res.json({
 							"code":200,
 							"msg":"发布成功",
@@ -363,7 +363,7 @@ router.get('/getuserforks',async (req,res)=>{
 					if(err){
 						res.send("出错了")
 					}else{
-						console.log(ret)
+					//	console.log(ret)
 						result.push(ret)
 						
 						
@@ -375,7 +375,7 @@ router.get('/getuserforks',async (req,res)=>{
 					if(err){
 						res.send("出错了")
 					}else{
-						console.log(ret)
+						//console.log(ret)
 						avaterlist.push(ret)
 						
 						
@@ -537,7 +537,7 @@ router.get('/get_talklist',(req,res)=>{
 						"data":err
 					})
 				}else{
-					console.log(ret)
+					//console.log(ret)
 					res.json({
 						"data":ret
 					})
@@ -587,7 +587,7 @@ router.get('/add_album',(req,res)=>{
 		if(err){
 			res.json({"data":"err"})
 		}else{
-			console.log(ret)
+			//console.log(ret)
 		if(ret===null){
 			var album=new Album({
 				Album_tags:body.Album_tags,
