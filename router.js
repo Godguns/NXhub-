@@ -210,6 +210,10 @@ router.get('/api/v1/auth/change_info',  (req,res)=>{
 				 await News.updateMany({
 					username: body.username}, { avater: body.avater }
 					);
+					await Pixiv
+					.updateMany({
+						author: body.username}, { avater: body.avater }
+						);
 
 		console.log("修改结果为",ret)
 		res.json({
@@ -421,7 +425,7 @@ router.get('/supdate',(req,res)=>{
 				if(err){
 					console.log("myc!")
 				}else{
-				
+					console.log(ret)
 					newhistory=	ret.history
 					
 				}
@@ -792,6 +796,23 @@ router.get('/del_banner',(req,res)=>{
 				})
 			}
 		})
+})
+//删除瀑布流内容
+router.get('/del_pics',(req,res)=>{
+	var body=req.query;
+	
+	Pixiv.remove({
+		_id: body.id
+	}, function (err, ret) {
+		if (err) {
+			console.log('删除失败')
+		} else {
+		res.json({
+			"data":ret
+		})
+	}
+})
+
 })
 //根据专辑_id查找专辑内部的图片
 router.get('/findimgs_byid',(req,res)=>{
