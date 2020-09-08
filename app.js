@@ -16,15 +16,36 @@ var io = require('socket.io')(http);
 //     //socket.emit('msg', "are u online?");
 //   })
 // }
- 
+var people;
 io.on('connection',  function(socket){
+  
+  socket.on('sender',async function(data){
+    
+    
+
+   await isOnline.findOne({username:data.to},async (err,ret)=>{
+      if(err){
+        console.log("转发失败，查无此人")
+      }else{
+        var obj={
+          data:data,
+          avater:data.avater,
+          ret:ret
+        }
+       
+      await  socket.emit(data.to,obj)
+      console.log(data.to+"接受消息："+obj)
+      }
+    })
+})
   //socket.broadcast.emit('isconnect', "欢迎上线");
   socket.emit('isconnect', "欢迎上线");
-  //socket.broadcast.emit('welcome', "欢迎上线");
+  socket.broadcast.emit('welcome', "欢迎上线");
   socket.emit('welcome',"欢迎上线")
+
     socket.on('online', async (data) => {
 
-    console.log(data.socket_id,"这个人上线了")
+   // console.log(data.socket_id,"这个人上线了")
    // console.log("++++++  "+data.username+"    ++++++++")
      await isOnline.findOne({
         username:data.username,
@@ -71,7 +92,7 @@ io.on('connection',  function(socket){
               }else{
                 isOnline.find({},(err,ret)=>{
                   if(err){}else{
-                    var people=new Set();
+                   people=new Set();
                     for(var i=0; i<ret.length;i++){
                       people.add(ret[i].username)
                     }
@@ -88,16 +109,20 @@ io.on('connection',  function(socket){
          
        
         }
+
        
       })
      
-
+   
 
 //????
   
 });
 
-
+// setInterval(()=>{
+//   socket.broadcast.emit("datalist",[...people])
+//   socket.emit('datalist',[...people])
+// },5000)
   socket.on('exit',function(data){
     isOnline.deleteOne({username:data.username},async(err,ret)=>{
       if(err){
@@ -109,7 +134,7 @@ io.on('connection',  function(socket){
        if(err){
          console.log("???")
        }else{
-        await socket.broadcast.emit('out',"退出登录")
+        await socket.broadcast.emit('out',ret)
        }
      })
        
@@ -117,26 +142,8 @@ io.on('connection',  function(socket){
       }
     })
   })
-  socket.on('sender',async function(data){
-      //console.log(data)
-      //socket.broadcast.emit(data.to,"hhh")
-      
+ 
 
-     await isOnline.findOne({username:data.to},async (err,ret)=>{
-        if(err){
-          console.log("转发失败，查无此人")
-        }else{
-          var obj={
-            data:data,
-            avater:data.avater,
-            ret:ret
-          }
-         
-        await  socket.broadcast.emit(data.to,obj)
-        console.log(data.to+"接受消息："+obj)
-        }
-      })
-  })
   
 });
 
@@ -152,8 +159,10 @@ io.on('connection',  function(socket){
 app.use((req,res,next)=>{
    res.header("Access-Control-Allow-Credentials", "true"); 
 // res.header('Access-Control-Allow-Origin', '*');
+res.header("Access-Control-Allow-Headers", "Content-Type,token");//这里“Access-Token”是我要传到后台的内容key
+res.header('Content-Type', 'application/json;charset=utf-8')
 　　res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
-　　res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
+　　res.header('Access-Control-Allow-Headers', 'request-origin,Content-Type,token, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild');
 　　res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
 　　if (req.method == 'OPTIONS') {
 　　　　res.sendStatus(200) /*让options请求快速返回*/
@@ -187,6 +196,6 @@ app.use(function (req, res) {
 })
 
 // 相当于server.listen
-http.listen(4000,function(){
-    console.log('服务在4000端口已经启动');
+http.listen(4001,function(){
+    console.log('服务在4001端口已经启动');
 })

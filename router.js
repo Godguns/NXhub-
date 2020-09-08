@@ -34,7 +34,8 @@ router.get('/api/v1/auth/login',(req,res)=>{
 			password:body.password,
 			avater:user.avater,
 			history:user.history,
-			collect:user.collect
+			collect:user.collect,
+			token:token
 		}
 			})
 		}
