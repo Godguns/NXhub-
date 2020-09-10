@@ -189,7 +189,29 @@ router.get('/api/v1/auth',(req,res)=>{
 	})	
 
 })
-
+//修改用户tags
+router.get('/set_tags',async (req,res)=>{
+	var body=req.query
+	var ret=await User.updateOne({username:body.username},{tags:body.tags})
+	res.json({"tags":ret})
+	
+})
+//获取用户tags
+router.get('/get_tags',async (req,res)=>{
+	var body=req.query
+	User.findOne({username:body.username},(err,ret)=>{
+		if(err){
+			console.log('err')
+		}else{
+			console.log(ret)
+			res.json({
+				"tags":ret.tags
+			})
+		}
+	})
+	
+	
+})
 //修改用户信息
 router.get('/api/v1/auth/change_info',  (req,res)=>{
 		var body=req.query;
@@ -210,10 +232,12 @@ router.get('/api/v1/auth/change_info',  (req,res)=>{
 				 await News.updateMany({
 					username: body.username}, { avater: body.avater }
 					);
-					await Pixiv
-					.updateMany({
+					await Pixiv.updateMany({
 						author: body.username}, { avater: body.avater }
 						);
+						await tj.updateMany({
+							username: body.username}, { avater: body.avater }
+							);
 
 		console.log("修改结果为",ret)
 		res.json({
@@ -641,26 +665,46 @@ router.get('/add_album',(req,res)=>{
 //修改专辑
 router.get('/update_album',(req,res)=>{
 	var body=req.query;
-	Album.findOne({_id:body._id},async(err,ret)=>{
+	console.log(req.query)
+	Album.findOne({_id:body.id},async(err,ret)=>{
 		if(err){
 			res.json({
 				"data":err
 			})
 		}else{
-	var updata=	await	Album.updateOne({_id:body._id},{
+	var updata=	await	Album.updateOne({_id:body.id},{
 				Album_tags:body.Album_tags,
 				Album_info:body.Album_info,
 				Album_author:body.Album_author,
 				master_img:body.master_img,
 				Album_name:body.Album_name,
 				Album_time:body. Album_time,
-				isRecommend:body.isRecommend
+				isRecommend:body.isRecommend,
+				Album_imgs:body.Album_imgs
+
 			})
 			res.json({
 				"data":updata
 			})
 		}
 	})
+})
+//删除专辑
+router.get('/del_album',(req,res)=>{
+	var body=req.query;
+	Album.remove({
+		_id: body.id
+	}, function (err, ret) {
+		if (err) {
+			console.log('删除失败')
+		} else {
+		res.json({
+			"data":ret
+		})
+	}
+})
+
+
 })
 //获取推荐专辑
 router.get('/getR_album',(req,res)=>{
@@ -798,15 +842,33 @@ router.get('/del_banner',(req,res)=>{
 		})
 })
 //删除瀑布流内容
-router.get('/del_pics',(req,res)=>{
+router.get('/del_pics',async (req,res)=>{
 	var body=req.query;
-	
-	Pixiv.remove({
+	await Pixiv.findOne({_id:body.id},async (err,ret)=>{
+		if(err){
+			console.log(err)
+		}else{
+			await User.findOne({username:ret.author},async (err,result)=>{
+				if(err){
+					console.log(err);
+				}else{
+					
+					var newhistory=result.history.filter(item=>{
+						return item!==ret.imgsrc
+					})
+					await User.updateOne({username:ret.author},{history:newhistory})
+				}
+			})
+		}
+
+	})
+	Pixiv.deleteOne({
 		_id: body.id
 	}, function (err, ret) {
 		if (err) {
 			console.log('删除失败')
 		} else {
+
 		res.json({
 			"data":ret
 		})

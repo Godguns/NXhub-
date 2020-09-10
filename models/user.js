@@ -2,6 +2,10 @@ var mongooes=require('mongoose')
 mongooes.connect('mongodb://localhost/test')
 var Schema=mongooes.Schema
 var userSchema=new Schema({
+	tags:{
+		type:[],
+		required:false
+	},
 	username:{
 		type:String,
 		required:true

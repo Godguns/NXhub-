@@ -45,7 +45,7 @@ io.on('connection',  function(socket){
 
     socket.on('online', async (data) => {
 
-   // console.log(data.socket_id,"这个人上线了")
+    console.log(data.socket_id,"这个人上线了")
    // console.log("++++++  "+data.username+"    ++++++++")
      await isOnline.findOne({
         username:data.username,
