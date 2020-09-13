@@ -474,7 +474,7 @@ router.get('/getpics',(req,res)=>{
 			})
 		}else{
 			res.json({
-				"data":ret
+				"data":ret.reverse()
 			})
 		}
 
@@ -488,7 +488,7 @@ router.get('/toinfopic',(req,res)=>{
 		if (err) {
 			console.log(err)
 		}else{
-		await	ret.forEach((item,index)=>{
+		await	ret.reverse().forEach((item,index)=>{
 				if (item.imgsrc===body.img) {
 					
 						res.json({
