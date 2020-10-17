@@ -9,7 +9,8 @@ const e = require('express');
 var Talklist=require('./models/talklist')
 var jwt=require('jsonwebtoken')
 var tj=require('./models/TuiJian')
-var banner=require('./models/Banner')
+var banner=require('./models/Banner');
+var project=require('./models/Project')
 //登录接口
 router.get('/api/v1/auth/login',(req,res)=>{
 	var body=req.query
@@ -770,11 +771,13 @@ router.get('/get_TJ',(req,res)=>{
 //添加推荐关注
 router.get('/add_TJ',(req,res)=>{
 	var body=req.query;
+	console.log(body)
 	User.findOne({username:body.username},(err,ret)=>{
 		if(err){res.json({"data":err})}else{
 			var tuijian=new tj({
 				username:body.username,
-				avater:ret.avater
+				avater:ret.avater,
+				content:body.content,
 				
 			})
 			tuijian.save({},(err,ret)=>{
@@ -797,7 +800,8 @@ router.get('/add_TJ',(req,res)=>{
 router.get('/add_banner',(req,res)=>{
 	var body=req.query;
 	var ban=new banner({
-		banner:body.banner
+		banner:body.banner,
+		info:body.info,
 	})
 	ban.save({},(err,ret)=>{
 		if(err){
@@ -812,7 +816,7 @@ router.get('/add_banner',(req,res)=>{
 	})
 })
 //获取轮播图
-router.get('/get_bannner',(req,res)=>{
+router.get('/get_banner',(req,res)=>{
 	banner.find({},(err,ret)=>{
 		if(err){
 			res.json({
@@ -893,4 +897,56 @@ router.get('/findimgs_byid',(req,res)=>{
 		}
 	})
 })
-module.exports = router;
+//¥¥¥获取用户数据
+router.get('/getusers',(req,res)=>{
+	var body=req.query;
+	User
+	.find({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":"error!!!"
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//项目管理
+router.get('/getproject',(req,res)=>{
+	var body=req.query;
+	project.find({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":"err!!!!"
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+//添加项目模块
+router.get('/add_project',(req,res)=>{
+	var body=req.query;
+	var newproject=new project({
+		name:body.name,
+		content:body.content,
+		status:body.status,
+		xmstatus:body.xmstatus
+	});
+	newproject.save({},(err,ret)=>{
+		if(err){
+			res.json({
+				"data":"error!!!!"
+			})
+		}else{
+			res.json({
+				"data":ret
+			})
+		}
+	})
+})
+module.exports = router; 

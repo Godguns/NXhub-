@@ -1,5 +1,5 @@
 var mongooes=require('mongoose')
-mongooes.connect('mongodb://localhost/test')
+mongooes.connect('mongodb://localhost/td')
 var Schema=mongooes.Schema
 var userSchema=new Schema({
 	tags:{

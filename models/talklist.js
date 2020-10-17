@@ -1,5 +1,5 @@
 var mongooes=require('mongoose')
-mongooes.connect('mongodb://localhost/test', { useNewUrlParser: true })
+mongooes.connect('mongodb://localhost/td', { useNewUrlParser: true })
 var Schema=mongooes.Schema
 var talklist=new Schema({
 	

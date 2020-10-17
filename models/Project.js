@@ -1,18 +1,23 @@
 var mongooes=require('mongoose')
 mongooes.connect('mongodb://localhost/td')
 var Schema=mongooes.Schema
-var tuijian=new Schema({
-	username:{
+var project=new Schema({
+	name:{
 		type:String,
 		required:true
 	},
 	content:{
 		type:String,
 		required:false
-	},
-	avater:{
+    },
+    xmstatus:{
+        type:String,
+        required:false
+
+    },
+	status:{
 		type:String,
 		required:true
 	},
 })
-module.exports=mongooes.model('TuiJian',tuijian);
+module.exports=mongooes.model('Project',project);

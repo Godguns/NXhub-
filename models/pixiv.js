@@ -1,5 +1,5 @@
 var mongooes=require('mongoose')
-mongooes.connect('mongodb://localhost/test', { useNewUrlParser: true })
+mongooes.connect('mongodb://localhost/td', { useNewUrlParser: true })
 var Schema=mongooes.Schema
 var pixiv=new Schema({
 	
@@ -21,12 +21,12 @@ var pixiv=new Schema({
 	},
 	avater:{
 		type:String,
-		required:true
+		required:false
 
 	},
 	imgsrc:{
 		type:String,
-		required:true
+		required:false
     },
     Album:{
         type:String,
@@ -34,7 +34,7 @@ var pixiv=new Schema({
     },
     time:{
         type:String,
-        required:true
+        required:false
 	}
 
 
